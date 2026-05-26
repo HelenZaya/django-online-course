@@ -24,7 +24,10 @@ class Learner(models.Model):
         (DATA_SCIENTIST, 'Data Scientist'),
         (DATABASE_ADMIN, 'Database Admin'),
     ]
-    occupation = models.CharField(null=False, max_length=20, choices=OCCUPATION_CHOICES, default=STUDENT)
+    occupation = models.CharField(
+        null=False, max_length=20,
+        choices=OCCUPATION_CHOICES, default=STUDENT
+    )
     social_link = models.URLField(max_length=200)
 
     def __str__(self):
@@ -80,8 +83,13 @@ class Question(models.Model):
 
     def is_get_score(self, selected_ids):
         all_correct = self.choice_set.filter(is_correct=True).count()
-        selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
-        return all_correct == selected_correct and selected_correct > 0
+        selected_correct = self.choice_set.filter(
+            is_correct=True, id__in=selected_ids
+        ).count()
+        if all_correct == selected_correct:
+            return True
+        else:
+            return False
 
 
 class Choice(models.Model):

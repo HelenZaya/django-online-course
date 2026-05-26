@@ -28,17 +28,16 @@ def submit(request, course_id):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     enrollment = get_object_or_404(Enrollment, user=user, course=course)
-    submission = Submission.objects.create(enrollment=enrollment)
-
+    submission = Submission(enrollment=enrollment)
+    submission.save()
     for key, value in request.POST.items():
         if key.startswith('choice'):
             try:
-                choice = Choice.objects.get(pk=int(value))
-                submission.choices.add(choice)
+                selected_choice = Choice.objects.get(pk=int(value))
+                submission.choices.add(selected_choice)
+                submission.save()
             except Choice.DoesNotExist:
                 pass
-    submission.save()
-
     return HttpResponseRedirect(
         reverse('onlinecourse:show_exam_result', args=(course.id, submission.id))
     )
@@ -47,13 +46,12 @@ def submit(request, course_id):
 def show_exam_result(request, course_id, submission_id):
     course = get_object_or_404(Course, pk=course_id)
     submission = get_object_or_404(Submission, pk=submission_id)
-    selected_ids = submission.choices.values_list('id', flat=True)
-
+    choices = submission.choices.all()
+    selected_ids = choices.values_list('id', flat=True)
     total_score = 0
     for question in course.question_set.all():
         if question.is_get_score(selected_ids):
             total_score += question.grade
-
     return render(request, 'onlinecourse/exam_result.html', {
         'course': course,
         'submission': submission,
